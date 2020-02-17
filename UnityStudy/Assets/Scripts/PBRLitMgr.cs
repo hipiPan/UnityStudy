@@ -7,7 +7,7 @@ public class PBRLitMgr : MonoBehaviour
 {
     public Light[] SphereLitList;
     public Light[] SpotLitList;
-    public Light Sun;
+    public Light MainLit;
     void Start()
     {
     }
@@ -56,5 +56,12 @@ public class PBRLitMgr : MonoBehaviour
         Shader.SetGlobalVectorArray("_SpotLitPosList", SpotLitPosList);
         Shader.SetGlobalVectorArray("_SpotLitColList", SpotLitColList);
         Shader.SetGlobalVectorArray("_SpotLitDirList", SpotLitDirList);
+
+        // Main Light
+        Vector4 MainLitDir = new Vector4(MainLit.transform.forward.x,
+                                        MainLit.transform.forward.y,
+                                        MainLit.transform.forward.z,
+                                        MainLit.intensity);
+        Shader.SetGlobalVector("_MainLitDir", MainLitDir);
     }
 }

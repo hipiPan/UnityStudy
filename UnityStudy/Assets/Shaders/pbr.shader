@@ -20,6 +20,7 @@
 			#include "UnityCG.cginc"
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            float4 _MainLitDir;
             float _SphereLitCount;
             float4 _SphereLitPosList[4];
             float4 _SphereLitColList[4];
@@ -85,7 +86,12 @@
                 fixed4 albedo = tex2D(_MainTex, i.uv);
                 float3 N = normalize(i.normal);
                 float3 Lo = float3(0.0, 0.0, 0.0);
-                
+                {
+                    float3 L = normalize(-_MainLitDir.xyz);
+                    float NoL = clamp(dot(N, L), 0.0, 1.0);
+                    float illuminance = _MainLitDir.w * NoL;
+                    Lo += (albedo / 3.1415926) * illuminance;
+                }
                 // calcDynamicLighting
                 for(int n = 0; n < _SphereLitCount; n++)
                 {
