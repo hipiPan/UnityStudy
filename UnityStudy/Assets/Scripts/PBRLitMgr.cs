@@ -2,32 +2,59 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class PBRLitMgr : MonoBehaviour
 {
-    public Light[] litList;
+    public Light[] SphereLitList;
+    public Light[] SpotLitList;
+    public Light Sun;
     void Start()
     {
-        
     }
 
-    void FixedUpdate()
+    void Update()
     {
-        // 灯光参数
-        Vector4[] litPosList = new Vector4[8];
-        Vector4[] litColList = new Vector4[8];
-        for (int i = 0; i < litList.Length; i++)
+        // Sphere Light
+        Vector4[] SphereLitPosList = new Vector4[4];
+        Vector4[] SphereLitColList = new Vector4[4];
+        for (int i = 0; i < SphereLitList.Length; i++)
         {
-            litPosList[i] = new Vector4(litList[i].transform.position.x,
-                                        litList[i].transform.position.y,
-                                        litList[i].transform.position.z,
-                                        litList[i].range);
-            litColList[i] = new Vector4(litList[i].color.r,
-                                        litList[i].color.g,
-                                        litList[i].color.b,
-                                        litList[i].intensity);
+            SphereLitPosList[i] = new Vector4(SphereLitList[i].transform.position.x,
+                                        SphereLitList[i].transform.position.y,
+                                        SphereLitList[i].transform.position.z,
+                                        SphereLitList[i].range);
+            SphereLitColList[i] = new Vector4(SphereLitList[i].color.r,
+                                        SphereLitList[i].color.g,
+                                        SphereLitList[i].color.b,
+                                        SphereLitList[i].intensity);
         }
-        Shader.SetGlobalFloat("_LitCount", litList.Length);
-        Shader.SetGlobalVectorArray("_LitPosList", litPosList);
-        Shader.SetGlobalVectorArray("_LitColList", litColList);
+        Shader.SetGlobalFloat("_SphereLitCount", SphereLitList.Length);
+        Shader.SetGlobalVectorArray("_SphereLitPosList", SphereLitPosList);
+        Shader.SetGlobalVectorArray("_SphereLitColList", SphereLitColList);
+
+        // Spot Light
+        Vector4[] SpotLitPosList = new Vector4[4];
+        Vector4[] SpotLitColList = new Vector4[4];
+        Vector4[] SpotLitDirList = new Vector4[4];
+        
+        for (int i = 0; i < SpotLitList.Length; i++)
+        {
+            SpotLitPosList[i] = new Vector4(SpotLitList[i].transform.position.x,
+                                        SpotLitList[i].transform.position.y,
+                                        SpotLitList[i].transform.position.z,
+                                        SpotLitList[i].range);
+            SpotLitColList[i] = new Vector4(SpotLitList[i].color.r,
+                                        SpotLitList[i].color.g,
+                                        SpotLitList[i].color.b,
+                                        SpotLitList[i].intensity);
+            SpotLitDirList[i] = new Vector4(SpotLitList[i].transform.forward.x,
+                                        SpotLitList[i].transform.forward.y,
+                                        SpotLitList[i].transform.forward.z,
+                                        Mathf.Cos(SpotLitList[i].spotAngle/2));
+        }
+        Shader.SetGlobalFloat("_SpotLitCount", SpotLitList.Length);
+        Shader.SetGlobalVectorArray("_SpotLitPosList", SpotLitPosList);
+        Shader.SetGlobalVectorArray("_SpotLitColList", SpotLitColList);
+        Shader.SetGlobalVectorArray("_SpotLitDirList", SpotLitDirList);
     }
 }

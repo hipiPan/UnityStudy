@@ -20,9 +20,13 @@
 			#include "UnityCG.cginc"
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            float _LitCount;
-            float4 _LitPosList[10];
-            float4 _LitColList[10];
+            float _SphereLitCount;
+            float4 _SphereLitPosList[4];
+            float4 _SphereLitColList[4];
+            float _SpotLitCount;
+            float4 _SpotLitPosList[4];
+            float4 _SpotLitColList[4];
+            float4 _SpotLitDirList[4];
 
             struct appdata
             {
@@ -62,22 +66,53 @@
                 float sqrDist = dot(unormalizedLightVector , unormalizedLightVector);
                 float attenuation = 1.0 / (max(sqrDist , 0.01*0.01));
                 attenuation *= smoothDistanceAtt(sqrDist , invSqrAttRadius); 
-                return attenuation; 
+                return attenuation;
             }
+
+            float getAngleAtt(float3 normalizedLightVector, float3 lightDir, float lightAngleScale , float lightAngleOffset)
+            {
+                float cd = dot(lightDir , normalizedLightVector); 
+                float attenuation = saturate(cd * lightAngleScale + lightAngleOffset); 
+                attenuation *= attenuation;
+                return attenuation; 
+            } 
+
+            // calcDynamicLighting
+            
+            // calcMainLighting
 
             fixed4 frag(v2f i) : COLOR {
                 fixed4 albedo = tex2D(_MainTex, i.uv);
                 float3 N = normalize(i.normal);
                 float3 Lo = float3(0.0, 0.0, 0.0);
-                for(int n = 0; n < _LitCount; n++)
+                
+                // calcDynamicLighting
+                for(int n = 0; n < _SphereLitCount; n++)
                 {
-                    float3 unnormalizedLightVector = _LitPosList[n].xyz - i.posWorld;
+                    float3 unnormalizedLightVector = _SphereLitPosList[n].xyz - i.posWorld;
                     float3 L = normalize(unnormalizedLightVector);
-                    float lightInvSqrAttRadius = 1.0 / (_LitPosList[n].w * _LitPosList[n].w);
+                    float lightInvSqrAttRadius = 1.0 / (_SphereLitPosList[n].w * _SphereLitPosList[n].w);
                     float att = 1.0;
                     att *= getDistanceAtt(unnormalizedLightVector, lightInvSqrAttRadius);
-                    Lo += (albedo / 3.1415926) * saturate(dot(N, L)) * att * _LitColList[n].xyz * _LitColList[n].w;
+                    Lo += (albedo / 3.1415926) * saturate(dot(N, L)) * att * _SphereLitColList[n].xyz * _SphereLitColList[n].w;
                 }
+
+                for(int n = 0; n < _SpotLitCount; n++)
+                {
+                    float3 unnormalizedLightVector = _SpotLitPosList[n].xyz - i.posWorld;
+                    float3 L = normalize(unnormalizedLightVector);
+                    float lightInvSqrAttRadius = 1.0 / (_SpotLitPosList[n].w * _SpotLitPosList[n].w);
+
+                    float cosInner = max(dot(-_SpotLitDirList[n].xyz, L), 0.01);
+                    float cosOuter = _SpotLitDirList[n].w;
+                    float litAngleScale = 1.0 / max(0.001, cosInner - cosOuter);
+                    float litAngleOffset = -cosOuter * litAngleScale;
+                    float att = 1.0;
+                    att *= getDistanceAtt(unnormalizedLightVector, lightInvSqrAttRadius);
+                    att *= getAngleAtt(L, -_SpotLitDirList[n].xyz, litAngleScale, litAngleOffset);
+                    Lo += (albedo / 3.1415926) * saturate(dot(N, L)) * att * _SpotLitColList[n].xyz * _SpotLitColList[n].w;
+                }
+
                 return float4(Lo, 1.0);
             }
 			
